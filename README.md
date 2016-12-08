@@ -6,7 +6,53 @@ See Gravel et al. 2011 PNAS Figure 4 for a graphical view of the model.
 
 This framework is based on using the msprime coalesent simulator by Jerome Kelleher (https://github.com/jeromekelleher), imported automatically by the docker container build and used under the GPLv3 License. See https://msprime.readthedocs.io/en/stable/introduction.html for an introduction to msprime and its documentation. 
 
+This framework is built as a docker container and the container runs the simulation. All
+arguments are passed to the docker run command (see below) and output placed in a directory
+shared with the container by the host which you must specify. More specifically, this github
+source contains the Dockerfile and docker build context for building the container. Per update
+to your clone of the repo, you only need to build the container once. Then you can run it as
+much as you like.
+
 ## Output
 
 This program will produce a VCF output file with the simulated diploid individuals, and a sample map file that maps the VCF sample names to their respective populations. The population labels are configurable on the command line, but are set to correct defaults if the framework is for the purpose of modeling the populations described above.
 
+### Prerequisites
+
+Docker version 1.12 or higher. Any operating system that will run that will do. You do not need any input files or other auxillary information, other than what you want to set parameters to if you want to change from the Gravel et al. estimates of the parameters.
+
+### To build the docker image
+
+`docker build --build-arg UID=$UID -t out-of-africa-model out-of-africa-model`
+
+This will build a docker image called out-of-africa-model and add it to your collection of images.
+
+### To run the simulation and generate a VCF
+
+Create a directory called shared (or whatever you want, adjusting below), or specify any
+existing directory, wherever you want your output to go.
+
+```
+mkdir -p shared
+docker run -t -i -v $PWD/shared:/home/popsim/shared out-of-africa-model --n-samples 100 100 100 --genetic-map hapmap-phaseII-genetic-maps/genetic_map_GRCh37_chr22.txt.gz --output-basename shared/simulated-chm22
+```
+
+This will create 100 diploid individuals for each of the 3 populations and output their genotypes at segregating sites as phased VCF data in shared/simulated-chm22.vcf, and a sample mapping file that indicates which sample is from which population, as shared/simulated-chm22.map. Both of which are suitable directly for use as a reference population for RFMIX v2 (separate project).
+
+NOTE: In the future, you will just have to specify which chromosome, not a path to a genetic map file that is inside the container. For now, just change the "chr22" part of the filename accordingly.
+
+To see a list of command line options that you may modify, just do
+
+`docker run -t -i out-of-africa-model -h`
+
+Note that you can not change the basic structure of the model, just the parameters of it, as described above.
+
+Note also that at this time the migration rates between populations after their divisions can not be changed at this time by the command line and are hard coded to the values found by Gravel et al. 2011. Thus, radically changing the parameters of the model, for whatever purpose, have to deal with these rates being set as well, although you can modify the code and rebuild the container.
+
+### License
+
+(c) 2016 Mark Koni Hamilton Wright, Stanford University School of Medicine
+
+Available under the GNU General Public License v3.
+
+Credits to Alicia Martin (https://github.com/armartin) who supplied a script that also performed this simulation in more fixed-purpose form, that was used to construct this framework.
