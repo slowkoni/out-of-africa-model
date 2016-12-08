@@ -41,8 +41,8 @@ def out_of_africa(sp):
     # separate ways in the world. Command line accepts values in percentages as given in
     # the Gravel et al. paper. We just need to know the starting effective size, starting
     # as in the present day effective size, as the simulation goes backward in time.
-    sp.europe_final_size = sp.out_to_europe_size / math.exp(-(sp.europe_growth_rate/100.) * (sp.merge_europe_asia/sp.generation_time))
-    sp.asia_final_size = sp.out_to_asia_size / math.exp(-(sp.asia_growth_rate/100.) * (sp.merge_europe_asia/sp.generation_time))
+    sp.europe_final_size = sp.out_to_europe_size / math.exp(-(sp.europe_growth_rate/100.) * (sp.merge_europe_asia_time/sp.generation_time))
+    sp.asia_final_size = sp.out_to_asia_size / math.exp(-(sp.asia_growth_rate/100.) * (sp.merge_europe_asia_time/sp.generation_time))
 
     # Set the number of distinct initial populations and their effective sizes, also
     # the number of lineages to simulate (coalesce) (sp.n_samples[])
@@ -80,7 +80,7 @@ def out_of_africa(sp):
     ]
 
     # Set up the list of changes to populations that happen and when they happen
-    europe_asia_merge_time = sp.merge_europe_asia/sp.generation_time
+    europe_asia_merge_time = sp.merge_europe_asia_time/sp.generation_time
     demographic_events = [
         # All the next events, until indicated below, are coincident and thus really one
         # event
@@ -105,12 +105,13 @@ def out_of_africa(sp):
         # Next, the migrating out of africa population (currently pop 1) joins to the
         # population of origin (pop 0), the african population
         msprime.MassMigration(
-            time=sp.merge_to_africa/sp.generation_time, source=1, destination=0, proportion=1.0),
+            time=sp.merge_to_africa_time/sp.generation_time, source=1, destination=0, proportion=1.0),
 
         # In the final event of the model, the African population (pop 0, the only one left)
         # reduces in size to the ancestral population size until the MRCA (end of the simulation)
         msprime.PopulationParametersChange(
-            time=sp.africa_time/sp.generation_time, initial_size=sp.ancestral_size, population_id=0)
+            time=sp.africa_expansion_time/sp.generation_time,
+            initial_size=sp.ancestral_size, population_id=0)
     ]
 
     # Use the demography debugger to print out the demographic history
@@ -162,18 +163,18 @@ def simulate_ooa(population_configurations, migration_matrix, demographic_events
 cmdline = argparse.ArgumentParser(description="Read command-line settings for population simulation")
 
 cmdline.add_argument("--generation-time", help="Set generation time in years", type=int, default=25)
-cmdline.add_argument("--africa-size", help="Set effective population size of African population (held constant throughout) (N_AF)",type=int,default=14474)
 cmdline.add_argument("--ancestral-size",help="Set ancestral population size from which --africa-size population emerges (N_A)",type=int,default=7300)
+cmdline.add_argument("--africa-size", help="Set effective population size of African population (held constant throughout) (N_AF)",type=int,default=14474)
 cmdline.add_argument("--out-of-africa-size",help="Set effective size of population that leaves africa at --merge-to-africa time (T_B)", type=int, default=1861)
 cmdline.add_argument("--out-to-europe-size",help="Set effective size of population that leaves out of africa population to go to Europe (N_EU0)",type=int, default=1032)
 cmdline.add_argument("--out-to-asia-size",help="Set effective size of population that leaves out of africa population to go to Asia (N_AS0)",type=int,default=550)
 
-cmdline.add_argument("--merge-europe-asia", help="Set time in years when separated European and Asian populations merge to out of africa population (T_EuAs)",type=float,default=23000.)
-cmdline.add_argument("--merge-to-africa", help="Set time in years when merged European and Asian populations merge to African population (T_B)", type=float, default=51000.)
-cmdline.add_argument("--africa-time",help="Set time in years when ancestral population size becomes the full african population size (instantaneous change) (T_AF)", type=float, default=148000.)
-
 cmdline.add_argument("--asia-growth-rate",help="Set %% growth rate per generation of Asian population", type=float, default=0.38)
 cmdline.add_argument("--europe-growth-rate",help="Set %% growth rate per generation of European population", type=float, default=0.48)
+
+cmdline.add_argument("--merge-europe-asia-time", help="Set time in years when separated European and Asian populations merge to out of africa population (T_EuAs)",type=float,default=23000.)
+cmdline.add_argument("--merge-to-africa-time", help="Set time in years when merged European and Asian populations merge to African population (T_B)", type=float, default=51000.)
+cmdline.add_argument("--africa-expansion-time",help="Set time in years when ancestral population size becomes the full african population size (instantaneous change) (T_AF)", type=float, default=148000.)
 
 cmdline.add_argument("--n-samples",metavar="N",help="sample sizes to generate, order africa europe asia",type=int,nargs=3,default=[10, 10, 10])
 
@@ -182,10 +183,16 @@ cmdline.add_argument("--output-basename",help="prefix for filename (may include 
 
 # Note - if a genetic map isn't specified, need to figure out how to set a sensible default
 #        map. Totally extra to do that though though.
-cmdline.add_argument("--genetic-map",help="Genetic map file for chromosome to simulate, hapmap phase2 4 column format. This will control the size in bp of the chromosome as well. Only a single chromosome is simulated, the map file should be for exactly one chromosome, not the genome.",type=str,required=True)
+cmdline.add_argument("--genetic-map",help="Genetic map file for chromosome to simulate, hapmap phase2 4 column format. This will control the size in bp of the chromosome as well. Only a single chromosome is simulated, the map file should be for exactly one chromosome, not the genome.",type=str,default="")
+cmdline.add_argument("--chromosome",help="Simulate the specified human genome chromosome (GRCh37), any autosome 1 through 22 or X. Either an explicit genetic map with the --genetic-map option or --chromosome must be specified, but --genetic-map option overrides this option",type=str,default=20)
 
 # Now that we know how to understand them, get the user's options
 args = cmdline.parse_args()
+
+# If the user did not specify and explicit genetic map and instead gave a chromosome
+# set the genetic map argument to the appropriate genetic map from hapmap phaseII
+if args.genetic_map == "" and args.chromosome != "":
+    args.genetic_map="hapmap-phaseII-genetic-maps/genetic_map_GRCh37_chr%s.txt.gz" % args.chromosome
 
 # Construct what we need to specify a simulation to msprime
 (pop_config, migration_matrix, demography) = out_of_africa(args)
