@@ -6,6 +6,7 @@ import math
 from datetime import datetime
 import gzip
 import argparse
+import os
 
 # NOTE - All comments are from KONI unless otherwise indicated. 
 
@@ -188,6 +189,8 @@ cmdline.add_argument("--chromosome",help="Simulate the specified human genome ch
 
 # Now that we know how to understand them, get the user's options
 args = cmdline.parse_args()
+outcmd = "sed -e 's/^1\\t/%s\\t/' > shared/%s.vcf" % (str(args.chromosome), args.output_basename)
+print(outcmd,file=sys.stderr)
 
 # If the user did not specify and explicit genetic map and instead gave a chromosome
 # set the genetic map argument to the appropriate genetic map from hapmap phaseII
@@ -203,14 +206,14 @@ simulation = simulate_ooa(pop_config, migration_matrix, demography, args.genetic
 # Write VCF and sample map output. Sample map only if an output basename was given
 # otherwise VCF goes to stdout. I am so glad msprime has a VCF output function!
 if args.output_basename != "":
-    f = open(args.output_basename + '.vcf','w')
+    f = os.popen(outcmd, "w");
 else:
     f = sys.stdout
 simulation.write_vcf(f,ploidy=2)
 f.close()
 
 if args.output_basename != "":
-    f = open(args.output_basename + '.map','w')
+    f = open('shared/' + args.output_basename + '.map','w')
     sm = 0
     for i in xrange(0,len(args.n_samples)):
         for j in xrange(0,args.n_samples[i]):
