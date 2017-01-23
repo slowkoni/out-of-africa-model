@@ -20,5 +20,5 @@ RUN chown -R popsim:popsim /home/popsim
 
 USER popsim
 RUN mspms 10 1 -t 10 -r 100 1000
-
+WORKDIR /home/popsim
 ENTRYPOINT ["/home/popsim/start.sh"]
