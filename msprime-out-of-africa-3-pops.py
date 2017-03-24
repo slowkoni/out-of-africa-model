@@ -161,7 +161,7 @@ def simulate_ooa(population_configurations, migration_matrix, demographic_events
 # these parameters, but the basic tree structure of the population divergence can't.
 # It is still and always going to be
 # Ancestral -> Africa -> { Africa, { Europe + East Asia } } -> { Africa, Europe, East Asia }
-cmdline = argparse.ArgumentParser(description="Read command-line settings for population simulation")
+cmdline = argparse.ArgumentParser(description="Perform a de novo simulation of the human population out-of-africa migration and separation as per Gravel et al. 2011, or with specified options overriding those parameters.")
 
 cmdline.add_argument("--generation-time", help="Set generation time in years", type=int, default=25)
 cmdline.add_argument("--ancestral-size",help="Set ancestral population size from which --africa-size population emerges (N_A)",type=int,default=7300)
@@ -189,7 +189,7 @@ cmdline.add_argument("--chromosome",help="Simulate the specified human genome ch
 
 # Now that we know how to understand them, get the user's options
 args = cmdline.parse_args()
-outcmd = "sed -e 's/^##contig=<ID=1/^##contig=<ID=%s/' | sed -e 's/^1\\t/%s\\t/' > %s.vcf" % (str(args.chromosome), str(args.chromosome), args.output_basename)
+outcmd = "sed -e 's/^##contig=<ID=1/##contig=<ID=%s/' | sed -e 's/^1\\t/%s\\t/' > %s.vcf" % (str(args.chromosome), str(args.chromosome), args.output_basename)
 print(outcmd,file=sys.stderr)
 
 # If the user did not specify and explicit genetic map and instead gave a chromosome
