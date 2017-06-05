@@ -189,7 +189,7 @@ cmdline.add_argument("--chromosome",help="Simulate the specified human genome ch
 
 # Now that we know how to understand them, get the user's options
 args = cmdline.parse_args()
-outcmd = "sed -e 's/^##contig=<ID=1/##contig=<ID=%s/' | sed -e 's/^1\\t/%s\\t/' > %s.vcf" % (str(args.chromosome), str(args.chromosome), args.output_basename)
+outcmd = "sed -e 's/^##contig=<ID=1/##contig=<ID=%s/' | sed -e 's/^1\\t/%s\\t/' | bgzip -c > %s.vcf.gz" % (str(args.chromosome), str(args.chromosome), args.output_basename)
 print(outcmd,file=sys.stderr)
 
 # If the user did not specify and explicit genetic map and instead gave a chromosome
@@ -221,4 +221,5 @@ if args.output_basename != "":
             sm += 1;
 
     f.close()
-
+    os.system('tabix %s.vcf.gz' % args.output_basename)
+    
