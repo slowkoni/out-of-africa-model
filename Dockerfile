@@ -2,7 +2,7 @@
 FROM ubuntu:14.04.5
 
 MAINTAINER Mark Koni Wright <mhwright@stanford.edu>
-LABEL version="0.02"
+LABEL version="0.03"
 
 # Update base distribution and install needed packages
 RUN apt-get update -y -qq && apt-get upgrade -y -qq

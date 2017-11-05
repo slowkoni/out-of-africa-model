@@ -36,12 +36,12 @@ existing directory, wherever you want your output to go.
 
 ```
 mkdir -p shared
-docker run -t -i -v $PWD/shared:/home/popsim/shared out-of-africa-model --n-samples 100 100 100 --chromosome 22 --output-basename shared/simulated-chm22
+docker run -t -i -v $PWD/shared:/home/popsim/shared out-of-africa-model --n-samples 100 100 100 --chromosome 20 --output-basename shared/simulated-chm20
 ```
 
-This will create 100 diploid individuals for each of the 3 populations and output their genotypes at segregating sites as phased VCF data in shared/simulated-chm22.vcf, and a sample mapping file that indicates which sample is from which population, as shared/simulated-chm22.map. Both of which are suitable directly for use as a reference population for RFMIX v2 (separate project).
+This will create 100 diploid individuals for each of the 3 populations and output their genotypes at segregating sites as phased VCF data in shared/simulated-chm20.vcf, and a sample mapping file that indicates which sample is from which population, as shared/simulated-chm20.map. Both of which are suitable directly for use as a reference population for RFMIX v2 (separate project).
 
-NOTE: In the future, you will just have to specify which chromosome, not a path to a genetic map file that is inside the container. For now, just change the "chr22" part of the filename accordingly.
+NOTE: In the future, you will just have to specify which chromosome, not a path to a genetic map file that is inside the container. For now, just change the "chr20" part of the filename accordingly.
 
 To see a list of command line options that you may modify, just do
 
